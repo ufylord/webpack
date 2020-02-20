@@ -2,7 +2,7 @@
 
 const _ = require("lodash");
 const path = require("path");
-const MemoryFs = require("memory-fs");
+const { createFsFromVolume, Volume } = require("memfs");
 const captureStdio = require("./helpers/captureStdio");
 
 let webpack;
@@ -60,6 +60,24 @@ describe("ProgressPlugin", function() {
 			expect(_.maxBy(logs, "length").length).toBeGreaterThan(50);
 		});
 	});
+
+	it("should display all type of percentage when it is applied to SingleCompiler", () => {
+		const compiler = createSimpleCompiler({
+			entries: true,
+			modules: true,
+			dependencies: true,
+			activeModules: true
+		});
+
+		return RunCompilerAsync(compiler).then(() => {
+			const logs = stderr.toString();
+
+			expect(logs).toEqual(expect.stringMatching(/\d+\/\d+ entries/));
+			expect(logs).toEqual(expect.stringMatching(/\d+\/\d+ dependencies/));
+			expect(logs).toEqual(expect.stringMatching(/\d+\/\d+ modules/));
+			expect(logs).toEqual(expect.stringMatching(/\d+ active/));
+		});
+	});
 });
 
 const createMultiCompiler = () => {
@@ -73,23 +91,24 @@ const createMultiCompiler = () => {
 			entry: "./b.js"
 		}
 	]);
-	compiler.outputFileSystem = new MemoryFs();
+	compiler.outputFileSystem = createFsFromVolume(new Volume());
 
 	new webpack.ProgressPlugin().apply(compiler);
 
 	return compiler;
 };
 
-const createSimpleCompiler = () => {
+const createSimpleCompiler = progressOptions => {
 	const compiler = webpack({
 		context: path.join(__dirname, "fixtures"),
 		entry: "./a.js"
 	});
 
-	compiler.outputFileSystem = new MemoryFs();
+	compiler.outputFileSystem = createFsFromVolume(new Volume());
 
 	new webpack.ProgressPlugin({
-		activeModules: true
+		activeModules: true,
+		...progressOptions
 	}).apply(compiler);
 
 	return compiler;

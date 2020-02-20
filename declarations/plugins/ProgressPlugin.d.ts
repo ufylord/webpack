@@ -14,6 +14,9 @@ export type HandlerFunction = (
 	...args: string[]
 ) => void;
 
+/**
+ * Options object for the ProgressPlugin
+ */
 export interface ProgressPluginOptions {
 	/**
 	 * Show active modules count and one active module in progress message
@@ -43,6 +46,10 @@ export interface ProgressPluginOptions {
 	 * Minimum modules count to start with. For better progress calculation. Default: 5000
 	 */
 	modulesCount?: number;
+	/**
+	 * Collect percent algorithm. By default it calculates by a median from modules, entries and dependencies percent
+	 */
+	percentBy?: "entries" | "modules" | "dependencies" | null;
 	/**
 	 * Collect profile data for progress steps. Default: false
 	 */
